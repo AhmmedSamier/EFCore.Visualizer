@@ -21,7 +21,7 @@ public partial class QueryPlanUserControl : UserControl
     private static readonly string AssemblyLocation = Path.GetDirectoryName(typeof(QueryPlanUserControl).Assembly.Location);
 
     private Color backgroundColor = VSColorTheme.GetThemedColor(ThemedDialogColors.WindowPanelBrushKey);
-    private readonly RatingPrompt ratingPrompt = new RatingPrompt("GiorgiDalakishvili.EFCoreVisualizer", "EFCore Visualizer", General.Instance, requestsBeforePrompt: 3);
+    private readonly RatingPrompt ratingPrompt = new RatingPrompt("GiorgiDalakishvili.EFCoreVisualizer", "EFCore Visualizer", General.Instance, requestsBeforePrompt: 1);
 
     public QueryPlanUserControl(VisualizerTarget visualizerTarget)
     {
@@ -36,7 +36,6 @@ public partial class QueryPlanUserControl : UserControl
         SafeDeleteFile(filePath);
 
         Unloaded -= QueryPlanUserControlUnloaded;
-        _ = ratingPrompt.PromptAsync();
     }
 
 #pragma warning disable VSTHRD100 // Avoid async void methods
@@ -55,7 +54,7 @@ public partial class QueryPlanUserControl : UserControl
             webView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
             webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
 #endif
-            (var _, var _, filePath) = await GetQueryAsync();
+            (_, _, filePath) = await GetQueryAsync();
 
             var (isError, error, planFilePath) = await GetQueryPlanAsync();
 
