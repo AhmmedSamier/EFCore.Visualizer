@@ -148,6 +148,8 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
             "Npgsql.NpgsqlCommand" => new PostgresDatabaseProvider(command),
             "Oracle.ManagedDataAccess.Client.OracleCommand" => new OracleDatabaseProvider(command),
             "Microsoft.Data.Sqlite.SqliteCommand" => new SQLiteDatabaseProvider(command),
+            "MySqlConnector.MySqlCommand" => new MySqlDatabaseProvider(command),
+            "MySql.Data.MySqlClient.MySqlCommand" => new MySqlDatabaseProvider(command),
             _ => null
         };
     }
