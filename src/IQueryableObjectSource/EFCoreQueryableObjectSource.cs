@@ -1,10 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.DebuggerVisualizers;
+﻿using Microsoft.VisualStudio.DebuggerVisualizers;
 using System;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 
 namespace IQueryableObjectSource;
 
@@ -44,33 +44,52 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
 
     private static void GetQuery(IQueryable queryable, Stream outgoingData)
     {
-        var html = GenerateQueryFile(queryable.ToQueryString());
+        if (!TryGetQueryString(queryable, out var query, out var errorMessage))
+        {
+            outgoingData.WriteError(errorMessage);
+            return;
+        }
+
+        var html = GenerateQueryFile(query);
         outgoingData.WriteSuccess(html);
     }
 
     private static void GetQueryPlan(IQueryable queryable, Stream outgoingData)
     {
-        using var command = queryable.CreateDbCommand();
-        var provider = GetDatabaseProvider(command);
-
-        if (provider == null)
+        if (!TryCreateDbCommand(queryable, out var command, out var errorMessage))
         {
-            outgoingData.WriteError($"Unsupported database provider {command.GetType().FullName}");
+            outgoingData.WriteError(errorMessage);
             return;
         }
 
-        try
+        using (command)
         {
-            var query = queryable.ToQueryString();
-            var rawPlan = provider.ExtractPlan();
+            var provider = GetDatabaseProvider(command);
 
-            var planFile = GeneratePlanFile(provider, query, rawPlan);
+            if (provider == null)
+            {
+                outgoingData.WriteError($"Unsupported database provider {command.GetType().FullName}");
+                return;
+            }
 
-            outgoingData.WriteSuccess(planFile);
-        }
-        catch (Exception ex)
-        {
-            outgoingData.WriteError($"Failed to extract execution plan. {ex.Message}");
+            try
+            {
+                if (!TryGetQueryString(queryable, out var query, out errorMessage))
+                {
+                    outgoingData.WriteError(errorMessage);
+                    return;
+                }
+
+                var rawPlan = provider.ExtractPlan();
+
+                var planFile = GeneratePlanFile(provider, query, rawPlan);
+
+                outgoingData.WriteSuccess(planFile);
+            }
+            catch (Exception ex)
+            {
+                outgoingData.WriteError($"Failed to extract execution plan. {ex.Message}");
+            }
         }
     }
 
@@ -131,5 +150,90 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
             "Microsoft.Data.Sqlite.SqliteCommand" => new SQLiteDatabaseProvider(command),
             _ => null
         };
+    }
+
+    private static bool TryGetQueryString(IQueryable queryable, out string query, out string errorMessage)
+    {
+        var method = GetRelationalQueryableMethod("ToQueryString", typeof(string));
+        if (method == null)
+        {
+            query = string.Empty;
+            errorMessage = "Unable to locate EF Core method ToQueryString. Ensure EF Core 5 or newer is referenced by the debuggee.";
+            return false;
+        }
+
+        try
+        {
+            query = (string)method.Invoke(null, new object[] { queryable });
+            errorMessage = string.Empty;
+            return true;
+        }
+        catch (TargetInvocationException ex)
+        {
+            query = string.Empty;
+            errorMessage = ex.InnerException?.Message ?? ex.Message;
+            return false;
+        }
+        catch (Exception ex)
+        {
+            query = string.Empty;
+            errorMessage = ex.Message;
+            return false;
+        }
+    }
+
+    private static bool TryCreateDbCommand(IQueryable queryable, out DbCommand command, out string errorMessage)
+    {
+        var method = GetRelationalQueryableMethod("CreateDbCommand", typeof(DbCommand));
+        if (method == null)
+        {
+            command = null;
+            errorMessage = "Unable to locate EF Core method CreateDbCommand. Ensure EF Core 5 or newer with relational provider is referenced by the debuggee.";
+            return false;
+        }
+
+        try
+        {
+            command = (DbCommand)method.Invoke(null, new object[] { queryable });
+            errorMessage = string.Empty;
+            return true;
+        }
+        catch (TargetInvocationException ex)
+        {
+            command = null;
+            errorMessage = ex.InnerException?.Message ?? ex.Message;
+            return false;
+        }
+        catch (Exception ex)
+        {
+            command = null;
+            errorMessage = ex.Message;
+            return false;
+        }
+    }
+
+    private static MethodInfo GetRelationalQueryableMethod(string name, Type returnType)
+    {
+        const string typeName = "Microsoft.EntityFrameworkCore.RelationalQueryableExtensions";
+        var type = Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore.Relational")
+            ?? Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore");
+
+        if (type == null)
+        {
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                type = assembly.GetType(typeName);
+                if (type != null)
+                {
+                    break;
+                }
+            }
+        }
+
+        return type?.GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .FirstOrDefault(method => method.Name == name
+                && method.ReturnType == returnType
+                && method.GetParameters().Length == 1
+                && method.GetParameters()[0].ParameterType == typeof(IQueryable));
     }
 }
