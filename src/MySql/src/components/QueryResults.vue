@@ -177,7 +177,7 @@ onMounted(() => {
     } else if (message.command === 'showVisualizer') {
       loading.value = false;
       type.value = 'visualizer';
-      visualizerPlanSource.value = JSON.stringify(message.data);
+      visualizerPlanSource.value = message.data;
       visualizerQuery.value = message.query;
       error.value = '';
     } else if (message.command === 'showError') {

@@ -81,4 +81,12 @@
     <Resource Include="Fonts\fa-brands-400.ttf" />
     <Resource Include="Fonts\fa-solid-900.ttf" />
   </ItemGroup>
+  <Target Name="BuildVueApp" BeforeTargets="Build">
+    <Message Importance="high" Text="Building Vue App..." />
+    <Exec Command="bun run build" WorkingDirectory="$(MSBuildThisFileDirectory)..\MySql" />
+    <ItemGroup>
+      <MySqlFiles Include="$(MSBuildThisFileDirectory)..\MySql\dist\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(MySqlFiles)" DestinationFolder="$(MSBuildThisFileDirectory)Resources\MySQL\%(RecursiveDir)" />
+  </Target>
 </Project>

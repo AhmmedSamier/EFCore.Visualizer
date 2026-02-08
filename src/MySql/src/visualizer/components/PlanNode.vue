@@ -152,52 +152,52 @@ function centerCte() {
             <div v-if="
               node[NodeProp.RELATION_NAME] || node[NodeProp.FUNCTION_NAME]
             " :class="{ 'line-clamp-2': !showDetails }">
-              <span class="text-secondary">on</span>
+              <span class="text-secondary me-1">on</span>
               <span v-if="node[NodeProp.SCHEMA]">{{ node[NodeProp.SCHEMA] }}.</span>{{ node[NodeProp.RELATION_NAME] }}
               {{ node[NodeProp.FUNCTION_NAME] }}
               <span v-if="node[NodeProp.ALIAS]">
-                <span class="text-secondary">as</span>
+                <span class="text-secondary me-1">as</span>
                 {{ node[NodeProp.ALIAS] }}
               </span>
             </div>
             <div v-else-if="node[NodeProp.ALIAS]" :class="{ 'line-clamp-2': !showDetails }">
-              <span class="text-secondary">on</span>
+              <span class="text-secondary me-1">on</span>
               <span v-html="keysToString(node[NodeProp.ALIAS] as string)"></span>
             </div>
             <div v-if="node[NodeProp.GROUP_KEY]" :class="{ 'line-clamp-2': !showDetails }">
-              <span class="text-secondary">by</span>
+              <span class="text-secondary me-1">by</span>
               <span v-html="keysToString(node[NodeProp.GROUP_KEY] as string)"></span>
             </div>
             <div v-if="node[NodeProp.SORT_KEY]" :class="{ 'line-clamp-2': !showDetails }">
-              <span class="text-secondary">by</span>
+              <span class="text-secondary me-1">by</span>
               <span v-html="sortKeys(node[NodeProp.SORT_KEY] as string[], undefined)
                 "></span>
             </div>
             <div v-if="node[NodeProp.INDEX_NAME]" :class="{ 'line-clamp-2': !showDetails }">
-              <span class="text-secondary">using</span>
+              <span class="text-secondary me-1">using</span>
               <span v-html="keysToString(node[NodeProp.INDEX_NAME] as string)"></span>
             </div>
             <div v-if="node[NodeProp.HASH_CONDITION]" :class="{ 'line-clamp-2': !showDetails }">
-              <span class="text-secondary">on</span>
+              <span class="text-secondary me-1">on</span>
               <span v-html="keysToString(node[NodeProp.HASH_CONDITION] as string)"></span>
             </div>
             <div v-if="node[NodeProp.FILTER]" :class="{ 'line-clamp-2': !showDetails }">
-              <span class="text-secondary">filter</span>
+              <span class="text-secondary me-1">filter</span>
               <span v-html="keysToString(node[NodeProp.FILTER] as string)"></span>
             </div>
             <div v-if="node[NodeProp.OUTPUT]" :class="{ 'line-clamp-2': !showDetails }">
-              <span class="text-secondary">Output</span>
+              <span class="text-secondary me-1">Output</span>
               <span v-html="keysToString(node[NodeProp.OUTPUT] as string)"></span>
             </div>
             <div v-if="node[NodeProp.ATTACHED_CONDITION]" :class="{ 'line-clamp-2': !showDetails }">
-              <span class="text-secondary">Condition</span>
+              <span class="text-secondary me-1">Condition</span>
               <span v-html="keysToString(node[NodeProp.ATTACHED_CONDITION] as string)
                 "></span>
             </div>
             <div v-if="node[NodeProp.CTE_NAME]">
               <a class="text-reset" href="" @click.prevent.stop="centerCte">
                 <FontAwesomeIcon :icon="faSearch" class="text-secondary"></FontAwesomeIcon>
-                <span class="text-secondary">CTE</span>
+                <span class="text-secondary me-1">CTE</span>
                 {{ node[NodeProp.CTE_NAME] }}
               </a>
             </div>

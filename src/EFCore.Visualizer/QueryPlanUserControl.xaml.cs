@@ -18,7 +18,9 @@ public partial class QueryPlanUserControl : UserControl
 {
     private string? filePath;
     private readonly VisualizerTarget visualizerTarget;
-    private static readonly string AssemblyLocation = Path.GetDirectoryName(typeof(QueryPlanUserControl).Assembly.Location);
+
+    private static readonly string AssemblyLocation =
+        Path.GetDirectoryName(typeof(QueryPlanUserControl).Assembly.Location);
 
     private Color backgroundColor = VSColorTheme.GetThemedColor(ThemedDialogColors.WindowPanelBrushKey);
     private const string VirtualHost = "efcore-visualizer.com";
@@ -28,7 +30,18 @@ public partial class QueryPlanUserControl : UserControl
         this.visualizerTarget = visualizerTarget;
         InitializeComponent();
 
+        Loaded += QueryPlanUserControlLoaded;
         Unloaded += QueryPlanUserControlUnloaded;
+    }
+
+    private void QueryPlanUserControlLoaded(object sender, RoutedEventArgs e)
+    {
+        if (System.Windows.Window.GetWindow(this) is { } window)
+        {
+            window.WindowState = WindowState.Maximized;
+        }
+
+        Loaded -= QueryPlanUserControlLoaded;
     }
 
     private void QueryPlanUserControlUnloaded(object sender, RoutedEventArgs e)
@@ -76,7 +89,8 @@ public partial class QueryPlanUserControl : UserControl
         }
         catch (Exception ex)
         {
-            MessageBox.Show("Cannot retrieve query plan: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show("Cannot retrieve query plan: " + ex.Message, "Error", MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
         finally
         {
@@ -154,11 +168,13 @@ public partial class QueryPlanUserControl : UserControl
         }
     }
 
-    private static bool IsBackgroundDarkColor(Color color) => color.R * 0.2126 + color.G * 0.7152 + color.B * 0.0722 < 255 / 2.0;
+    private static bool IsBackgroundDarkColor(Color color) =>
+        color.R * 0.2126 + color.G * 0.7152 + color.B * 0.0722 < 255 / 2.0;
 
     private void WebViewNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
     {
-        _ = webView.CoreWebView2.ExecuteScriptAsync($"document.querySelector(':root').style.setProperty('--bg-color', 'RGB({backgroundColor.R}, {backgroundColor.G}, {backgroundColor.B})');");
+        _ = webView.CoreWebView2.ExecuteScriptAsync(
+            $"document.querySelector(':root').style.setProperty('--bg-color', 'RGB({backgroundColor.R}, {backgroundColor.G}, {backgroundColor.B})');");
     }
 
     private static string GetResourcesPath()
