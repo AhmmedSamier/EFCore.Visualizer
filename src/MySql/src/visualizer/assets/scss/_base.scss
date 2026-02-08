@@ -1,0 +1,162 @@
+@use "sass:math";
+// Color contrast
+@function color-yiq($color, $dark: $yiq-text-dark, $light: $yiq-text-light) {
+  $r: red($color);
+  $g: green($color);
+  $b: blue($color);
+
+  $yiq: math.div(($r * 299) + ($g * 587) + ($b * 114), 1000);
+
+  @if ($yiq >= $yiq-contrasted-threshold) {
+    @return $dark;
+  } @else {
+    @return $light;
+  }
+}
+
+/**
+ * Severity classes
+ */
+@each $color, $value in $severity-colors {
+  .alert.c-#{$color} {
+    background-color: $value;
+    color: color-yiq($value);
+    font-weight: bold;
+
+    .text-secondary {
+      color: color-yiq($value) !important;
+      font-weight: normal;
+    }
+  }
+
+  .progress-bar.c-#{$color} {
+    background-color: $value;
+    border-color: $value !important;
+  }
+
+  .text-c-#{$color} {
+    color: $value;
+  }
+
+  svg circle.c-#{$color} {
+    fill: $value;
+  }
+}
+
+$buffers-colors: (
+  hit: map-get($severity-colors, 1),
+  read: map-get($severity-colors, 2),
+  dirtied: map-get($severity-colors, 3),
+  written: map-get($severity-colors, 4),
+) !default;
+
+/**
+ * Shared buffers classes
+ */
+@each $color, $value in $buffers-colors {
+  .bg-#{$color} {
+    background-color: $value;
+  }
+  .border-#{$color} {
+    border-color: $value !important;
+  }
+}
+
+.btn-group-xs .btn,
+.btn-xs {
+  padding: 0.25rem 0.4rem;
+  font-size: $font-size-sm;
+  border-radius: 0.2rem;
+
+  &,
+  .fa {
+    line-height: 0.5;
+  }
+}
+
+/*
+ * Used with @extend in .plan-node.never-executed
+ */
+%bg-hatched {
+  $color: $gray-lightest;
+  $angle: 45deg;
+  $progress-height: 1rem !default;
+  background-image: linear-gradient(
+    $angle,
+    $color 25%,
+    transparent 25%,
+    transparent 50%,
+    $color 50%,
+    $color 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: $progress-height $progress-height;
+}
+
+.bg-hatched {
+  @extend %bg-hatched;
+}
+
+.border-dashed {
+  border-style: dashed !important;
+  background-color: transparent !important;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.opacity-20 {
+  opacity: 0.2 !important;
+}
+
+/**
+ * Custom Scrollbar
+ */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 5px;
+
+  &:hover {
+    background: #a0aec0;
+  }
+}
+
+// Global Font
+body {
+  font-family: "Inter", sans-serif;
+}
+
+code,
+pre,
+.font-monospace {
+  font-family: "JetBrains Mono", monospace;
+}
+
+// Tooltip Styling
+.tippy-box {
+  background-color: #2c3e50;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tippy-arrow {
+  color: #2c3e50;
+}

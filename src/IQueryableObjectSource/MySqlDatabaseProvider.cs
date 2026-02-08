@@ -15,6 +15,17 @@ internal class MySqlDatabaseProvider(DbCommand command) : DatabaseProvider(comma
 
         using var reader = command.ExecuteReader();
 
+        if (reader.FieldCount == 1)
+        {
+            var planBuilder = new StringBuilder();
+            while (reader.Read())
+            {
+                planBuilder.Append(reader.GetValue(0));
+            }
+
+            return planBuilder.ToString();
+        }
+
         var headers = Enumerable.Range(0, reader.FieldCount)
             .Select(reader.GetName)
             .ToArray();
@@ -38,9 +49,6 @@ internal class MySqlDatabaseProvider(DbCommand command) : DatabaseProvider(comma
         }
 
         var builder = new StringBuilder();
-        AppendRow(builder, headers, widths);
-        AppendSeparator(builder, widths);
-
         foreach (var row in rows)
         {
             AppendRow(builder, row, widths);
@@ -49,7 +57,7 @@ internal class MySqlDatabaseProvider(DbCommand command) : DatabaseProvider(comma
         return builder.ToString();
     }
 
-    internal override string GetPlanDirectory(string baseDirectory) => Path.Combine(baseDirectory, "MySql");
+    internal override string GetPlanDirectory(string baseDirectory) => Path.Combine(baseDirectory, "MySQL");
 
     private static void AppendRow(StringBuilder builder, IReadOnlyList<string> values, IReadOnlyList<int> widths)
     {
@@ -61,19 +69,7 @@ internal class MySqlDatabaseProvider(DbCommand command) : DatabaseProvider(comma
             }
             builder.Append(values[i].PadRight(widths[i]));
         }
-        builder.AppendLine();
-    }
 
-    private static void AppendSeparator(StringBuilder builder, IReadOnlyList<int> widths)
-    {
-        for (var i = 0; i < widths.Count; i++)
-        {
-            if (i > 0)
-            {
-                builder.Append("-+-");
-            }
-            builder.Append(new string('-', widths[i]));
-        }
         builder.AppendLine();
     }
 }

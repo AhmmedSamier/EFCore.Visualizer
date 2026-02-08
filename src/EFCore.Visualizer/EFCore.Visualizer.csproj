@@ -53,22 +53,22 @@
     <Content Include="ThirdPartyLicenses\*.*">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\Postgres\*.*">
+    <Content Include="Resources\Postgres\**">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\SqlServer\*.*">
+    <Content Include="Resources\SqlServer\**">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\Oracle\*.*">
+    <Content Include="Resources\Oracle\**">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\MySql\*.*">
+    <Content Include="Resources\MySQL\**">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\Common\*.*">
+    <Content Include="Resources\Common\**">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\SQLite\*.*">
+    <Content Include="Resources\SQLite\**">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>

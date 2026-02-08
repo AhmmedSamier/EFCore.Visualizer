@@ -160,7 +160,49 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
         if (method == null)
         {
             query = string.Empty;
-            errorMessage = "Unable to locate EF Core method ToQueryString. Ensure EF Core 5 or newer is referenced by the debuggee.";
+
+            // Enhanced diagnostic information
+            var efAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic && a.FullName.Contains("EntityFrameworkCore"))
+                .Select(a => a.GetName().Name + " v" + a.GetName().Version)
+                .ToList();
+
+            var diagnosticInfo = efAssemblies.Any()
+                ? $" Found EF assemblies: {string.Join(", ", efAssemblies)}"
+                : " No EF Core assemblies found in AppDomain.";
+
+            // Check if the type exists
+            const string typeName = "Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions";
+            var efType = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic && a.FullName.Contains("EntityFrameworkCore"))
+                .Select(a =>
+                {
+                    try
+                    {
+                        return a.GetType(typeName);
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                })
+                .FirstOrDefault(t => t != null);
+
+            if (efType != null)
+            {
+                var methodNames = efType.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .Where(m => m.Name.Contains("Query") || m.Name == "ToQueryString")
+                    .Select(m => $"{m.Name}({string.Join(", ", m.GetParameters().Select(p => p.ParameterType.Name))})")
+                    .Take(10);
+                diagnosticInfo += $" Found type {typeName}. Available methods: {string.Join(", ", methodNames)}";
+            }
+            else
+            {
+                diagnosticInfo += $" Type {typeName} not found in any assembly.";
+            }
+
+            errorMessage =
+                $"Unable to locate EF Core method ToQueryString. Ensure EF Core 5 or newer is referenced by the debuggee.{diagnosticInfo}";
             return false;
         }
 
@@ -216,26 +258,88 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
 
     private static MethodInfo GetRelationalQueryableMethod(string name, Type returnType)
     {
-        const string typeName = "Microsoft.EntityFrameworkCore.RelationalQueryableExtensions";
-        var type = Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore.Relational")
-            ?? Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore");
+        // ToQueryString is in EntityFrameworkQueryableExtensions (Microsoft.EntityFrameworkCore.dll)
+        // CreateDbCommand is in RelationalQueryableExtensions (Microsoft.EntityFrameworkCore.Relational.dll)
+        string typeName = name == "ToQueryString"
+            ? "Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions"
+            : "Microsoft.EntityFrameworkCore.RelationalQueryableExtensions";
 
+        Type type = null;
+
+        // First, try the standard Type.GetType approach
+        if (name == "ToQueryString")
+        {
+            type = Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore");
+        }
+        else
+        {
+            type = Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore.Relational")
+                   ?? Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore");
+        }
+
+        // If not found, search through all EF Core assemblies
         if (type == null)
         {
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            var efAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic &&
+                            (a.FullName.Contains("EntityFrameworkCore") ||
+                             a.FullName.Contains("Microsoft.Data")))
+                .ToList();
+
+            foreach (var assembly in efAssemblies)
             {
-                type = assembly.GetType(typeName);
-                if (type != null)
+                try
                 {
-                    break;
+                    type = assembly.GetType(typeName);
+                    if (type != null)
+                    {
+                        break;
+                    }
+                }
+                catch
+                {
+                    // Ignore exceptions from assemblies that can't be inspected
+                    continue;
                 }
             }
         }
 
-        return type?.GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .FirstOrDefault(method => method.Name == name
-                && method.ReturnType == returnType
-                && method.GetParameters().Length == 1
-                && method.GetParameters()[0].ParameterType == typeof(IQueryable));
+        if (type == null)
+        {
+            return null;
+        }
+
+        // Find the method with flexible parameter matching
+        var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
+
+        foreach (var method in methods)
+        {
+            if (method.Name != name)
+                continue;
+
+            if (method.ReturnType != returnType)
+                continue;
+
+            var parameters = method.GetParameters();
+            if (parameters.Length != 1)
+                continue;
+
+            var paramType = parameters[0].ParameterType;
+
+            // Check if the parameter is IQueryable (check both generic and non-generic)
+            // The parameter type might be IQueryable<T> which has Name "IQueryable`1"
+            if (paramType.Name == "IQueryable`1" || paramType.Name == "IQueryable")
+            {
+                return method;
+            }
+
+            // Also check if it's assignable from IQueryable (more flexible)
+            if (paramType.IsGenericType && paramType.GetGenericTypeDefinition().Name == "IQueryable`1")
+            {
+                return method;
+            }
+        }
+
+        return null;
     }
 }

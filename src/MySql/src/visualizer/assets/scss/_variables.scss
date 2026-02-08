@@ -1,0 +1,103 @@
+$page-width: 1000px;
+
+$padding-base: 6px;
+$padding-sm: 3px;
+$padding-lg: 10px;
+$padding-xl: 18px;
+
+$font-size-base: 13px;
+$font-size-xs: round($font-size-base * 0.7);
+$font-size-sm: round($font-size-base * 0.9);
+$font-size-lg: round($font-size-base * 1.3);
+$font-size-xl: round($font-size-base * 1.7);
+
+$font-family-sans-serif: "Noto Sans", sans-serif;
+
+// MySQL Brand Colors
+$mysql-blue: #00758f;
+$mysql-orange: #e48e00;
+$mysql-light-blue: #00a4db;
+$mysql-dark: #1e3a4c;
+$mysql-gold: #f29111;
+
+$gray-lightest: #f7f7f7;
+$gray-light: darken($gray-lightest, 10%);
+$gray: darken(#f7f7f7, 30%);
+$gray-dark: darken(#f7f7f7, 50%);
+$gray-darkest: darken($gray-lightest, 70%);
+$white: white;
+
+$blue: $mysql-blue;
+$dark-blue: darken($mysql-blue, 10%);
+$light-blue: $mysql-light-blue;
+
+$red: #af2f11;
+$dark-red: #7c210c;
+$light-red: #fb8165;
+
+$green: #279404;
+$yellow: #f8e400;
+
+$bg-color: var(--bg-color);
+
+$text-color: var(--text-color);
+$text-color-light: var(--text-secondary);
+
+$line-color: var(--border-color);
+$line-color-light: lighten($gray-light, 10%);
+
+$link-color: $mysql-light-blue;
+
+$border-radius-base: 3px;
+$border-radius-lg: 6px;
+
+$main-color: $mysql-blue;
+$main-color-dark: $dark-blue;
+
+$plan-node-bg: var(--plan-node-bg);
+$highlight-color: $mysql-light-blue;
+$highlight-color-dark: $mysql-blue;
+
+$alert-color: $mysql-orange;
+
+$severity-colors: (
+  1: #ccc,
+  2: #fddb61,
+  3: $mysql-orange,
+  4: $mysql-gold,
+) !default;
+
+// The yiq lightness value that determines when the lightness of color changes from "dark" to "light". Acceptable values are between 0 and 255.
+$yiq-contrasted-threshold: 150 !default;
+
+// Customize the light and dark text colors for use in our YIQ color contrast function.
+$yiq-text-dark: $gray-darkest !default;
+$yiq-text-light: $white !default;
+
+// CSS Custom Properties for theming
+:root {
+  --bg-color: #ffffff;
+  --text-color: #212529;
+  --text-secondary: #6c757d;
+  --border-color: #dee2e6;
+  --plan-node-bg: #ffffff;
+  --card-bg: #ffffff;
+  --modal-bg: #ffffff;
+  --input-bg: #ffffff;
+  --btn-bg: #f8f9fa;
+  --mysql-blue: #{$mysql-blue};
+  --mysql-orange: #{$mysql-orange};
+  --mysql-light-blue: #{$mysql-light-blue};
+}
+
+[data-theme="dark"] {
+  --bg-color: #{$mysql-dark};
+  --text-color: #e9ecef;
+  --text-secondary: #adb5bd;
+  --border-color: #495057;
+  --plan-node-bg: #2d2d2d;
+  --card-bg: #2d2d2d;
+  --modal-bg: #2d2d2d;
+  --input-bg: #343a40;
+  --btn-bg: #495057;
+}

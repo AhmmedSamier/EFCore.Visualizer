@@ -1,0 +1,240 @@
+@use "sass:math";
+
+$compact-width: 50px;
+
+.plan-node {
+  cursor: default;
+  text-decoration: none;
+  color: $text-color;
+  display: inline-block;
+  position: relative;
+  font-size: $font-size-sm;
+  margin-bottom: 4px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  width: 260px;
+
+  .plan-node-body {
+    position: relative;
+    border: 1px solid $line-color;
+    border-radius: $border-radius-base;
+    background-color: $plan-node-bg;
+    box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+
+    &.card {
+      .card-body,
+      .card-header {
+        padding: $padding-base $padding-lg;
+      }
+
+      .card-header .card-header-tabs {
+        margin-right: 0;
+        margin-left: 0;
+        margin-bottom: -$padding-base;
+        margin-top: $padding-base;
+
+        .nav-link {
+          padding: math.div($padding-base, 2) $padding-lg;
+        }
+      }
+    }
+  }
+
+  &.parallel .plan-node-body {
+    box-shadow: none;
+  }
+
+  header {
+    margin-bottom: $padding-base;
+    overflow: hidden;
+
+    h4 {
+      font-size: $font-size-base;
+      font-weight: 600;
+      margin: 0;
+      line-height: inherit;
+      color: var(--node-h4-color) !important;
+    }
+
+    .node-duration {
+      float: right;
+      margin-left: $padding-lg;
+      font-size: $font-size-base;
+    }
+  }
+
+  .prop-list {
+    color: inherit;
+    // required for overflow-wrap to be taken into account
+    table-layout: fixed;
+  }
+
+  //hovers
+  &:hover,
+  &.highlight {
+    $hover-color: rgba(0, 0, 0, 0.4);
+
+    .plan-node-body {
+      box-shadow: 1px 1px 5px 0px $hover-color;
+    }
+
+    .workers > div {
+      border-color: rgba($hover-color, 0.2);
+    }
+  }
+
+  &.selected {
+    .plan-node-body {
+      border-color: var(--mysql-light-blue);
+      box-shadow: 0px 0px 8px 2px rgba(0, 164, 219, 0.4);
+    }
+
+    .workers > div {
+      border-color: rgba(0, 164, 219, 0.2);
+    }
+  }
+
+  .node-description {
+    text-align: left;
+    font-style: italic;
+    word-break: normal;
+
+    .node-type {
+      font-weight: 600;
+      background: linear-gradient(
+        135deg,
+        var(--mysql-blue) 0%,
+        var(--mysql-light-blue) 100%
+      );
+      color: #fff;
+      padding: 0 $padding-base;
+      border-radius: 3px;
+    }
+  }
+
+  .btn-default {
+    border: 0;
+  }
+
+  .text-secondary {
+    color: $text-color-light;
+  }
+
+  .plan-query-container {
+    border: 1px solid $line-color;
+    padding: $padding-xl;
+    background-color: var(--plan-node-bg);
+    position: absolute;
+    box-shadow: 0px 0px 10px 2px rgba(0, 0, 0, 0.3);
+    border-radius: $border-radius-base;
+    margin-bottom: $padding-xl;
+    z-index: 1;
+    left: 0;
+
+    h3 {
+      font-size: $font-size-lg;
+      width: 93%;
+      text-align: left;
+      border-bottom: 1px solid $line-color;
+      padding-bottom: $padding-base;
+      margin-bottom: $padding-lg;
+    }
+  }
+
+  .workers {
+    position: absolute;
+    left: -1px;
+    top: 1px;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+
+    > div {
+      border: 1px solid $gray-light;
+      border-radius: $border-radius-base;
+      background-color: $white;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+    }
+  }
+
+  .workers-handle {
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    right: -5px;
+
+    > div {
+      position: absolute;
+      top: 0;
+      background-color: white;
+      border: 1px solid darken($gray-lightest, 3);
+      border-radius: $border-radius-base;
+
+      &:hover {
+        background-color: $gray-lightest;
+        border-color: $gray-light;
+      }
+    }
+  }
+
+  .subplan-name {
+    background-color: #b3d7d7;
+    border-radius: $border-radius-base;
+  }
+
+  button {
+    .fa-chevron-right {
+      display: inline-block;
+    }
+
+    .fa-chevron-down {
+      display: none;
+    }
+  }
+
+  button[aria-expanded="true"] {
+    .fa-chevron-right {
+      display: none !important;
+    }
+
+    .fa-chevron-down {
+      display: inline-block !important;
+    }
+  }
+
+  &.plan-node-detail .text-truncate {
+    overflow: initial;
+    white-space: initial;
+    text-overflow: initial;
+  }
+}
+
+.node-bar-container {
+  height: 5px;
+  margin-top: $padding-lg;
+  margin-bottom: $padding-sm;
+  border-radius: $border-radius-lg;
+  background-color: $gray-light;
+  position: relative;
+
+  .node-bar {
+    border-radius: $border-radius-lg;
+    height: 100%;
+    text-align: left;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+}
+
+.node-bar-label {
+  text-align: left;
+  display: block;
+}
+
+.detailed {
+  width: 400px !important;
+}

@@ -21,7 +21,7 @@ public partial class QueryPlanUserControl : UserControl
     private static readonly string AssemblyLocation = Path.GetDirectoryName(typeof(QueryPlanUserControl).Assembly.Location);
 
     private Color backgroundColor = VSColorTheme.GetThemedColor(ThemedDialogColors.WindowPanelBrushKey);
-    private readonly RatingPrompt ratingPrompt = new RatingPrompt("GiorgiDalakishvili.EFCoreVisualizer", "EFCore Visualizer", General.Instance, requestsBeforePrompt: 1);
+    private const string VirtualHost = "efcore-visualizer.com";
 
     public QueryPlanUserControl(VisualizerTarget visualizerTarget)
     {
@@ -46,10 +46,16 @@ public partial class QueryPlanUserControl : UserControl
         {
             base.OnInitialized(e);
 
-            var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: Path.Combine(AssemblyLocation, "WVData"));
+            var environment =
+                await CoreWebView2Environment.CreateAsync(userDataFolder: Path.Combine(AssemblyLocation, "WVData"));
             await webView.EnsureCoreWebView2Async(environment);
 
-            webView.CoreWebView2.Profile.PreferredColorScheme = IsBackgroundDarkColor(backgroundColor) ? CoreWebView2PreferredColorScheme.Dark : CoreWebView2PreferredColorScheme.Light;
+            webView.CoreWebView2.SetVirtualHostNameToFolderMapping(VirtualHost, GetResourcesPath(),
+                CoreWebView2HostResourceAccessKind.Allow);
+
+            webView.CoreWebView2.Profile.PreferredColorScheme = IsBackgroundDarkColor(backgroundColor)
+                ? CoreWebView2PreferredColorScheme.Dark
+                : CoreWebView2PreferredColorScheme.Light;
 #if !DEBUG
             webView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
             webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
@@ -76,9 +82,17 @@ public partial class QueryPlanUserControl : UserControl
         {
             if (!string.IsNullOrEmpty(filePath))
             {
-                webView.CoreWebView2.Navigate(filePath);
+                var resourcesPath = GetResourcesPath();
 
-                ratingPrompt.RegisterSuccessfulUsage();
+                if (filePath.StartsWith(resourcesPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    var relativePath = filePath.Substring(resourcesPath.Length).Replace('\\', '/').TrimStart('/');
+                    webView.CoreWebView2.Navigate($"https://{VirtualHost}/{relativePath}");
+                }
+                else
+                {
+                    webView.CoreWebView2.Navigate(filePath);
+                }
             }
         }
     }
@@ -114,26 +128,6 @@ public partial class QueryPlanUserControl : UserControl
         return (true, string.Empty, string.Empty);
     }
 
-    private void ButtonReviewClick(object sender, RoutedEventArgs e)
-    {
-        StartProcess("https://marketplace.visualstudio.com/items?itemName=GiorgiDalakishvili.EFCoreVisualizer&ssr=false#review-details");
-    }
-
-    private void ButtonSponsorClick(object sender, RoutedEventArgs e)
-    {
-        StartProcess("https://github.com/sponsors/Giorgi/");
-    }
-
-    private void ButtonGitHubClick(object sender, RoutedEventArgs e)
-    {
-        StartProcess("https://github.com/Giorgi/EFCore.Visualizer");
-    }
-
-    private void ButtonCoffeeClick(object sender, RoutedEventArgs e)
-    {
-        StartProcess("https://ko-fi.com/giorgi");
-    }
-
     private static void StartProcess(string url)
     {
         try
@@ -165,5 +159,19 @@ public partial class QueryPlanUserControl : UserControl
     private void WebViewNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
     {
         _ = webView.CoreWebView2.ExecuteScriptAsync($"document.querySelector(':root').style.setProperty('--bg-color', 'RGB({backgroundColor.R}, {backgroundColor.G}, {backgroundColor.B})');");
+    }
+
+    private static string GetResourcesPath()
+    {
+        var current = AssemblyLocation;
+        while (current != null)
+        {
+            var resources = Path.Combine(current, "Resources");
+            if (Directory.Exists(resources))
+                return resources;
+            current = Path.GetDirectoryName(current);
+        }
+
+        return Path.Combine(AssemblyLocation, "Resources"); // Fallback
     }
 }
