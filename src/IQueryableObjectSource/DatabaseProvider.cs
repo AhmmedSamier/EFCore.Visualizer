@@ -8,7 +8,7 @@ internal abstract class DatabaseProvider(DbCommand command)
 {
     protected DbCommand Command { get; } = command;
 
-    public string ExtractPlan()
+    public string ExtractPlan(bool analyze)
     {
         var needToClose = false;
 
@@ -20,7 +20,7 @@ internal abstract class DatabaseProvider(DbCommand command)
                 Command.Connection.Open();
             }
 
-            return ExtractPlanInternal(Command);
+            return ExtractPlanInternal(Command, analyze);
         }
         finally
         {
@@ -31,7 +31,7 @@ internal abstract class DatabaseProvider(DbCommand command)
         }
     }
 
-    protected abstract string ExtractPlanInternal(DbCommand command);
+    protected abstract string ExtractPlanInternal(DbCommand command, bool analyze);
 
     internal abstract string GetPlanDirectory(string baseDirectory);
 

@@ -8,7 +8,7 @@ namespace IQueryableObjectSource;
 
 internal class OracleDatabaseProvider(DbCommand command) : DatabaseProvider(command)
 {
-    protected override string ExtractPlanInternal(DbCommand command)
+    protected override string ExtractPlanInternal(DbCommand command, bool analyze)
     {
         using var statisticsCommand = command.Connection.CreateCommand();
         try
@@ -19,9 +19,14 @@ internal class OracleDatabaseProvider(DbCommand command) : DatabaseProvider(comm
 
             // We need to empty the reader stream, so V$SQL_PLAN has all the stats, otherwise when we will query the plan - we will get older plan
             using var res = command.ExecuteReader();
-            while (res.Read()) { };
+            while (res.Read())
+            {
+            }
 
-            statisticsCommand.CommandText = @"SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(format=>'ALLSTATS LAST +cost +bytes +outline +PEEKED_BINDS +PROJECTION +ALIAS'))";
+            ;
+
+            statisticsCommand.CommandText =
+                @"SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(format=>'ALLSTATS LAST +cost +bytes +outline +PEEKED_BINDS +PROJECTION +ALIAS'))";
             using var reader = statisticsCommand.ExecuteReader();
 
             // Fetching the plan output

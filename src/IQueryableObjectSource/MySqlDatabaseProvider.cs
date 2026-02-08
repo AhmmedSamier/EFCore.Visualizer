@@ -9,9 +9,10 @@ namespace IQueryableObjectSource;
 
 internal class MySqlDatabaseProvider(DbCommand command) : DatabaseProvider(command)
 {
-    protected override string ExtractPlanInternal(DbCommand command)
+    protected override string ExtractPlanInternal(DbCommand command, bool analyze)
     {
-        command.CommandText = $"EXPLAIN {command.CommandText}";
+        var explain = analyze ? "EXPLAIN ANALYZE" : "EXPLAIN";
+        command.CommandText = $"{explain} {command.CommandText}";
 
         using var reader = command.ExecuteReader();
 
@@ -38,6 +39,7 @@ internal class MySqlDatabaseProvider(DbCommand command) : DatabaseProvider(comma
             {
                 row[i] = reader.IsDBNull(i) ? "NULL" : reader.GetValue(i)?.ToString() ?? string.Empty;
             }
+
             rows.Add(row);
         }
 
@@ -67,6 +69,7 @@ internal class MySqlDatabaseProvider(DbCommand command) : DatabaseProvider(comma
             {
                 builder.Append(" | ");
             }
+
             builder.Append(values[i].PadRight(widths[i]));
         }
 

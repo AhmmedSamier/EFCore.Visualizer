@@ -75,16 +75,42 @@ public partial class QueryPlanUserControl : UserControl
 #endif
             (_, _, filePath) = await GetQueryAsync();
 
-            var (isError, error, planFilePath) = await GetQueryPlanAsync();
+            await ReloadQueryPlan();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Cannot retrieve query plan: " + ex.Message, "Error", MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private async void OnAnalyzeChanged(object sender, RoutedEventArgs e)
+    {
+        if (webView != null && webView.CoreWebView2 != null)
+        {
+            await ReloadQueryPlan();
+        }
+    }
+
+    private async Task ReloadQueryPlan()
+    {
+        try
+        {
+            var operationType = AnalyzeCheckBox.IsChecked == true
+                ? OperationType.GetQueryPlanAnalyze
+                : OperationType.GetQueryPlan;
+            var (isError, error, planFilePath) = await GetQueryPlanAsync(operationType);
 
             if (isError && !string.IsNullOrWhiteSpace(error))
             {
                 MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                NavigateToFilePath();
             }
             else
             {
                 SafeDeleteFile(filePath);
                 filePath = planFilePath;
+                NavigateToFilePath();
             }
         }
         catch (Exception ex)
@@ -92,21 +118,22 @@ public partial class QueryPlanUserControl : UserControl
             MessageBox.Show("Cannot retrieve query plan: " + ex.Message, "Error", MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
-        finally
-        {
-            if (!string.IsNullOrEmpty(filePath))
-            {
-                var resourcesPath = GetResourcesPath();
+    }
 
-                if (filePath.StartsWith(resourcesPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    var relativePath = filePath.Substring(resourcesPath.Length).Replace('\\', '/').TrimStart('/');
-                    webView.CoreWebView2.Navigate($"https://{VirtualHost}/{relativePath}");
-                }
-                else
-                {
-                    webView.CoreWebView2.Navigate(filePath);
-                }
+    private void NavigateToFilePath()
+    {
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            var resourcesPath = GetResourcesPath();
+
+            if (filePath.StartsWith(resourcesPath, StringComparison.OrdinalIgnoreCase))
+            {
+                var relativePath = filePath.Substring(resourcesPath.Length).Replace('\\', '/').TrimStart('/');
+                webView.CoreWebView2.Navigate($"https://{VirtualHost}/{relativePath}");
+            }
+            else
+            {
+                webView.CoreWebView2.Navigate(filePath);
             }
         }
     }
@@ -119,9 +146,9 @@ public partial class QueryPlanUserControl : UserControl
         return ReadString(response);
     }
 
-    private async Task<(bool isError, string error, string data)> GetQueryPlanAsync()
+    private async Task<(bool isError, string error, string data)> GetQueryPlanAsync(OperationType operationType)
     {
-        var message = new ReadOnlySequence<byte>([(byte)OperationType.GetQueryPlan]);
+        var message = new ReadOnlySequence<byte>([(byte)operationType]);
         var response = await visualizerTarget.ObjectSource.RequestDataAsync(message, CancellationToken.None);
 
         return ReadString(response);

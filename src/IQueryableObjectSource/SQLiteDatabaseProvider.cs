@@ -10,13 +10,13 @@ namespace IQueryableObjectSource;
 
 internal class SQLiteDatabaseProvider(DbCommand command) : DatabaseProvider(command)
 {
-    protected override string ExtractPlanInternal(DbCommand command)
+    protected override string ExtractPlanInternal(DbCommand command, bool analyze)
     {
         command.CommandText = $"EXPLAIN QUERY PLAN {command.CommandText}";
 
         var planItems = new List<(int id, int parent, string detail)>
         {
-            (0, -1, "Query Plan")  // Add the root "Query Plan" item
+            (0, -1, "Query Plan") // Add the root "Query Plan" item
         };
 
         using var reader = command.ExecuteReader();
@@ -38,7 +38,8 @@ internal class SQLiteDatabaseProvider(DbCommand command) : DatabaseProvider(comm
         return htmlBuilder.ToString();
     }
 
-    private void BuildIndentedPlanHtml(List<(int id, int parent, string detail)> items, int parentId, StringBuilder builder)
+    private void BuildIndentedPlanHtml(List<(int id, int parent, string detail)> items, int parentId,
+        StringBuilder builder)
     {
         var matches = items.Where(i => i.parent == parentId).ToList();
 
@@ -49,12 +50,14 @@ internal class SQLiteDatabaseProvider(DbCommand command) : DatabaseProvider(comm
             {
                 builder.AppendLine("<li>");
 
-                builder.AppendLine($"<span class=\"tf-nc\"><span class=\"indicator\">▼</span>{WebUtility.HtmlEncode(item.detail)}</span>");
+                builder.AppendLine(
+                    $"<span class=\"tf-nc\"><span class=\"indicator\">▼</span>{WebUtility.HtmlEncode(item.detail)}</span>");
 
                 BuildIndentedPlanHtml(items, item.id, builder);
 
                 builder.AppendLine("</li>");
             }
+
             builder.AppendLine("</ul>");
         }
     }

@@ -10,5 +10,20 @@
             <FontFamily x:Key="FontAwesome">pack://application:,,,/EFCore.Visualizer;component/Fonts/#Font Awesome 6 Free Solid</FontFamily>
         </ResourceDictionary>
     </UserControl.Resources>
-    <wv2:WebView2 Name="webView" NavigationCompleted="WebViewNavigationCompleted" />
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ToolBarPanel Grid.Row="0" Margin="0,0,0,2">
+            <ToolBar>
+                <CheckBox x:Name="AnalyzeCheckBox" Content="Explain Analyze" Margin="5,0,0,0"
+                          Checked="OnAnalyzeChanged" Unchecked="OnAnalyzeChanged" />
+            </ToolBar>
+        </ToolBarPanel>
+
+        <wv2:WebView2 Grid.Row="1" Name="webView" NavigationCompleted="WebViewNavigationCompleted" />
+    </Grid>
 </UserControl>
+

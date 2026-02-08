@@ -5,7 +5,7 @@ namespace IQueryableObjectSource;
 
 internal class SqlServerDatabaseProvider(DbCommand command) : DatabaseProvider(command)
 {
-    protected override string ExtractPlanInternal(DbCommand command)
+    protected override string ExtractPlanInternal(DbCommand command, bool analyze)
     {
         using var statisticsCommand = command.Connection.CreateCommand();
         try

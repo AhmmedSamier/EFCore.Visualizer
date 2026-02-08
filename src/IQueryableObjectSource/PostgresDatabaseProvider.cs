@@ -8,9 +8,10 @@ namespace IQueryableObjectSource;
 
 internal class PostgresDatabaseProvider(DbCommand command) : DatabaseProvider(command)
 {
-    protected override string ExtractPlanInternal(DbCommand command)
+    protected override string ExtractPlanInternal(DbCommand command, bool analyze)
     {
-        command.CommandText = "EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS) " + command.CommandText;
+        var options = analyze ? "(ANALYZE, COSTS, VERBOSE, BUFFERS)" : "(COSTS, VERBOSE)";
+        command.CommandText = $"EXPLAIN {options} {command.CommandText}";
 
         using var reader = command.ExecuteReader();
         var plan = string.Join(Environment.NewLine, reader.Cast<IDataRecord>().Select(r => r.GetString(0)));

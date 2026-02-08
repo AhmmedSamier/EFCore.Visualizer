@@ -10,7 +10,10 @@ namespace IQueryableObjectSource;
 
 public class EFCoreQueryableObjectSource : VisualizerObjectSource
 {
-    private static readonly string ResourcesLocation = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(typeof(EFCoreQueryableObjectSource).Assembly.Location)), "Resources");
+    private static readonly string ResourcesLocation =
+        Path.Combine(
+            Path.GetDirectoryName(Path.GetDirectoryName(typeof(EFCoreQueryableObjectSource).Assembly.Location)),
+            "Resources");
 
     public override void TransferData(object target, Stream incomingData, Stream outgoingData)
     {
@@ -28,7 +31,10 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
                     GetQuery(queryable, outgoingData);
                     break;
                 case OperationType.GetQueryPlan:
-                    GetQueryPlan(queryable, outgoingData);
+                    GetQueryPlan(queryable, outgoingData, analyze: false);
+                    break;
+                case OperationType.GetQueryPlanAnalyze:
+                    GetQueryPlan(queryable, outgoingData, analyze: true);
                     break;
                 case OperationType.Unknown:
                 default:
@@ -54,7 +60,7 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
         outgoingData.WriteSuccess(html);
     }
 
-    private static void GetQueryPlan(IQueryable queryable, Stream outgoingData)
+    private static void GetQueryPlan(IQueryable queryable, Stream outgoingData, bool analyze)
     {
         if (!TryCreateDbCommand(queryable, out var command, out var errorMessage))
         {
@@ -80,7 +86,7 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
                     return;
                 }
 
-                var rawPlan = provider.ExtractPlan();
+                var rawPlan = provider.ExtractPlan(analyze);
 
                 var planFile = GeneratePlanFile(provider, query, rawPlan);
 
@@ -137,6 +143,7 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
                 return (OperationType)operationBuffer[0];
             }
         }
+
         return OperationType.Unknown;
     }
 
@@ -232,7 +239,8 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
         if (method == null)
         {
             command = null;
-            errorMessage = "Unable to locate EF Core method CreateDbCommand. Ensure EF Core 5 or newer with relational provider is referenced by the debuggee.";
+            errorMessage =
+                "Unable to locate EF Core method CreateDbCommand. Ensure EF Core 5 or newer with relational provider is referenced by the debuggee.";
             return false;
         }
 
