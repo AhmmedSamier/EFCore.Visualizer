@@ -10,6 +10,7 @@ namespace IQueryableObjectSource;
 
 public class EFCoreQueryableObjectSource : VisualizerObjectSource
 {
+    private const int AnalyzeCommandTimeoutSeconds = 180;
     private static readonly string ResourcesLocation =
         Path.Combine(
             Path.GetDirectoryName(Path.GetDirectoryName(typeof(EFCoreQueryableObjectSource).Assembly.Location)),
@@ -70,6 +71,11 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
 
         using (command)
         {
+            if (analyze && command.CommandTimeout < AnalyzeCommandTimeoutSeconds)
+            {
+                command.CommandTimeout = AnalyzeCommandTimeoutSeconds;
+            }
+
             var provider = GetDatabaseProvider(command);
 
             if (provider == null)
