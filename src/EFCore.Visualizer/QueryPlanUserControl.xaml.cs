@@ -73,7 +73,7 @@ public partial class QueryPlanUserControl : UserControl
             webView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
             webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
 #endif
-            (_, _, filePath) = await GetQueryAsync();
+            (_, _, filePath) = await SendRequestAsync(OperationType.GetQuery);
 
             await ReloadQueryPlan();
         }
@@ -99,7 +99,7 @@ public partial class QueryPlanUserControl : UserControl
             var operationType = AnalyzeCheckBox.IsChecked == true
                 ? OperationType.GetQueryPlanAnalyze
                 : OperationType.GetQueryPlan;
-            var (isError, error, planFilePath) = await GetQueryPlanAsync(operationType);
+            var (isError, error, planFilePath) = await SendRequestAsync(operationType);
 
             if (isError && !string.IsNullOrWhiteSpace(error))
             {
@@ -138,15 +138,7 @@ public partial class QueryPlanUserControl : UserControl
         }
     }
 
-    private async Task<(bool isError, string error, string data)> GetQueryAsync()
-    {
-        var message = new ReadOnlySequence<byte>([(byte)OperationType.GetQuery]);
-        var response = await visualizerTarget.ObjectSource.RequestDataAsync(message, CancellationToken.None);
-
-        return ReadString(response);
-    }
-
-    private async Task<(bool isError, string error, string data)> GetQueryPlanAsync(OperationType operationType)
+    private async Task<(bool isError, string error, string data)> SendRequestAsync(OperationType operationType)
     {
         var message = new ReadOnlySequence<byte>([(byte)operationType]);
         var response = await visualizerTarget.ObjectSource.RequestDataAsync(message, CancellationToken.None);
