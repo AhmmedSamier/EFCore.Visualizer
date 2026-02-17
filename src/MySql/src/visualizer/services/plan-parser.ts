@@ -127,6 +127,9 @@ export class PlanParser {
       const data = JSON.parse(source);
       return this.getPlanContent(data);
     } catch {
+      // JSON.parse failed, so we try alternative parsing methods.
+      // This is part of a trial-and-error parsing strategy to handle different input formats.
+
       // try to parse wrapping quotes
       const sourceTrimmed = source.trim();
       if (
@@ -139,7 +142,8 @@ export class PlanParser {
           );
           return this.getPlanContent(data);
         } catch {
-          // ignore
+          // The error is ignored because this is part of a trial-and-error parsing strategy.
+          // If JSON.parse fails, it falls back to fromJson and fromText methods.
         }
       }
 
