@@ -54,3 +54,40 @@ Some Plan
     expect(output.trim()).toBe("Some Plan")
   })
 })
+
+describe("PlanParser regex parsing", () => {
+  const parser = new PlanParser()
+
+  test("parses cost range correctly", () => {
+    // using fromText which uses the regex
+    const input = `
+-> Limit: 5 row(s)  (cost=0.00..10.00 rows=5)
+`
+    const output = parser.fromText(input)
+    const node = output.Plan
+    expect(node["Startup Cost"]).toBe(0.00)
+    expect(node["Total Cost"]).toBe(10.00)
+    expect(node["Plan Rows"]).toBe(5)
+  })
+
+  test("parses single cost correctly", () => {
+    const input = `
+-> Limit: 5 row(s)  (cost=10.00 rows=5)
+`
+    const output = parser.fromText(input)
+    const node = output.Plan
+    expect(node["Startup Cost"]).toBeUndefined()
+    expect(node["Total Cost"]).toBe(10.00)
+    expect(node["Plan Rows"]).toBe(5)
+  })
+
+  test("parses scientific notation correctly", () => {
+    const input = `
+-> Limit: 5 row(s)  (cost=1e3..2e3 rows=5)
+`
+    const output = parser.fromText(input)
+    const node = output.Plan
+    expect(node["Startup Cost"]).toBe(1000)
+    expect(node["Total Cost"]).toBe(2000)
+  })
+})
