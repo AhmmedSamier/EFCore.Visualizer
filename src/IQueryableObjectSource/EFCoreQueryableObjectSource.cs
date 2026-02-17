@@ -222,24 +222,7 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
             return false;
         }
 
-        try
-        {
-            query = (string)method.Invoke(null, new object[] { queryable });
-            errorMessage = string.Empty;
-            return true;
-        }
-        catch (TargetInvocationException ex)
-        {
-            query = string.Empty;
-            errorMessage = ex.InnerException?.Message ?? ex.Message;
-            return false;
-        }
-        catch (Exception ex)
-        {
-            query = string.Empty;
-            errorMessage = ex.Message;
-            return false;
-        }
+        return TryInvokeMethod(method, queryable, string.Empty, out query, out errorMessage);
     }
 
     private static bool TryCreateDbCommand(IQueryable queryable, out DbCommand command, out string errorMessage)
@@ -253,21 +236,27 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
             return false;
         }
 
+        return TryInvokeMethod(method, queryable, null, out command, out errorMessage);
+    }
+
+    private static bool TryInvokeMethod<TResult>(MethodInfo method, IQueryable queryable, TResult failureResult,
+        out TResult result, out string errorMessage)
+    {
         try
         {
-            command = (DbCommand)method.Invoke(null, new object[] { queryable });
+            result = (TResult)method.Invoke(null, new object[] { queryable });
             errorMessage = string.Empty;
             return true;
         }
         catch (TargetInvocationException ex)
         {
-            command = null;
+            result = failureResult;
             errorMessage = ex.InnerException?.Message ?? ex.Message;
             return false;
         }
         catch (Exception ex)
         {
-            command = null;
+            result = failureResult;
             errorMessage = ex.Message;
             return false;
         }
