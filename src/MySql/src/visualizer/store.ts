@@ -95,7 +95,8 @@ export function createStore(): Store {
       let planJson: IPlanContent
       try {
         planJson = (await planService.fromSourceAsync(source)) as IPlanContent
-      } catch {
+      } catch (error) {
+        console.error("Failed to parse plan from source:", error);
         store.plan = undefined
         return
       }
