@@ -54,12 +54,10 @@ const headerRegex = /^\\s*(QUERY|---|#).*$/;
 const prefixPattern = "^(\\s*->\\s*|\\s*)";
 const partialPattern = "(Finalize|Simple|Partial)*";
 const typePattern = "(.*?)";
-// tslint:disable-next-line:max-line-length
 // MySQL cost: (cost=10.0 rows=5)
 // We make the second cost and width optional.
 // Modified to support integer costs and scientific notation in rows/costs
-// Modified to support integer costs and scientific notation in rows/costs
-const numberPattern = "[0-9.eE+-]+";
+const numberPattern = "(?:(?!\\.\\.)[0-9.eE+-])+";
 const estimationPattern = `\\(cost=(${numberPattern})(?:\\.\\.(${numberPattern}))?\\s+rows=(${numberPattern})(?:\\s+width=(\\d+))?\\)`;
 const nonCapturingGroupOpen = "(?:";
 const nonCapturingGroupClose = ")";
@@ -333,7 +331,6 @@ export class PlanParser {
     // Array to keep reference to previous nodes with there depth
     const elementsAtDepth: ElementAtDepth[] = [];
 
-    // tslint:disable-next-line:max-line-length
     const subRegex =
       /^(\s*)((?:Sub|Init)Plan)\s*(?:\d+\s*)?\s*(?:\(returns.*\)\s*)?$/gm;
 

@@ -85,7 +85,6 @@ export class Node {
       RelationName,
       Alias,
     }
-    // tslint:disable-next-line:max-line-length
     const scanAndOperationsRegex =
       /^((?:Parallel\s+)?(?:Seq|Tid.*|Bitmap\s+Heap|WorkTable|(?:Async\s+)?Foreign)\s+Scan|Update|Insert|Delete|Merge)\son\s(\S+)(?:\s+(\S+))?$/.exec(
         type,
@@ -103,7 +102,6 @@ export class Node {
       RelationName,
       Alias,
     }
-    // tslint:disable-next-line:max-line-length
     const indexRegex =
       /^((?:Parallel\s+)?Index(?:\sOnly)?\sScan)(\sBackward)?\susing\s(\S+)\son\s(\S+)(?:\s+(\S+))?$/.exec(
         type,
