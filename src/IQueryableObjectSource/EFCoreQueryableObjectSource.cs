@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.DebuggerVisualizers;
 using System;
+using System.Collections.Concurrent;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
@@ -15,6 +16,8 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
         Path.Combine(
             Path.GetDirectoryName(Path.GetDirectoryName(typeof(EFCoreQueryableObjectSource).Assembly.Location)),
             "Resources");
+
+    private static readonly ConcurrentDictionary<(string, Type), Lazy<MethodInfo>> MethodCache = new();
 
     public override void TransferData(object target, Stream incomingData, Stream outgoingData)
     {
@@ -271,6 +274,11 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
     }
 
     private static MethodInfo GetRelationalQueryableMethod(string name, Type returnType)
+    {
+        return MethodCache.GetOrAdd((name, returnType), key => new Lazy<MethodInfo>(() => GetRelationalQueryableMethodInternal(key.Item1, key.Item2))).Value;
+    }
+
+    private static MethodInfo GetRelationalQueryableMethodInternal(string name, Type returnType)
     {
         // ToQueryString is in EntityFrameworkQueryableExtensions (Microsoft.EntityFrameworkCore.dll)
         // CreateDbCommand is in RelationalQueryableExtensions (Microsoft.EntityFrameworkCore.Relational.dll)
