@@ -169,18 +169,6 @@ public partial class QueryPlanUserControl : UserControl
         return (true, string.Empty, string.Empty);
     }
 
-    private static void StartProcess(string url)
-    {
-        try
-        {
-            Process.Start(url);
-        }
-        catch
-        {
-            // Ignore
-        }
-    }
-
     private static void SafeDeleteFile(string? path)
     {
         if (string.IsNullOrWhiteSpace(path)) return;
