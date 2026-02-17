@@ -7,13 +7,21 @@ vi.stubGlobal("__APP_VERSION__", "1.0.0");
 
 import Plan from "../Plan.vue";
 
+// Mock Vuetify useTheme
+vi.mock("vuetify", () => ({
+  useTheme: () => ({
+    global: {
+      name: { value: "light" },
+    },
+  }),
+}));
+
 // Mock dependencies
 vi.mock("@visualizer/store.ts", () => ({
   createStore: () => ({
     plan: {
       content: {
         Plan: {
-          // Add minimal node layout properties expected by usePlanLayout or components
           children: [],
           size: [100, 100],
           descendants: () => [],
@@ -53,39 +61,72 @@ vi.mock("splitpanes", () => ({
   Pane: { template: '<div class="pane"><slot></slot></div>' },
 }));
 
-// Mock composables
-const layoutMock = {
-  transform: {},
-  scale: {},
-  edgeWeight: vi.fn().mockReturnValue(1),
-  layoutRootNode: { value: { descendants: () => [] } },
-  ctes: { value: [] },
-  toCteLinks: {},
-  tree: { value: { descendants: () => [] } },
-  rootDescendants: { value: [] },
-  rootLinks: { value: [] }, // Explicitly empty
-  doLayout: vi.fn(),
-  initZoom: vi.fn(),
-  fitToScreen: vi.fn(),
-  zoomIn: vi.fn(),
-  zoomOut: vi.fn(),
-  lineGen: vi.fn(),
-  centerNode: vi.fn(),
-  updateNodeSize: vi.fn(),
-  getNodeX: vi.fn(),
-  getNodeY: vi.fn(),
-  getNodeWidth: vi.fn(),
-  getLayoutExtent: vi.fn(),
-  buildTree: vi.fn(),
-};
+// Mock composables with real refs
+vi.mock("@visualizer/composables/usePlanLayout", async () => {
+  const { ref } = await import("vue");
 
-vi.mock("@visualizer/composables/usePlanLayout", () => ({
-  usePlanLayout: () => layoutMock,
-}));
-// Also mock with relative path in case alias fails in test environment
-vi.mock("../../composables/usePlanLayout", () => ({
-  usePlanLayout: () => layoutMock,
-}));
+  const layoutMock = {
+    transform: {},
+    scale: {},
+    edgeWeight: vi.fn().mockReturnValue(1),
+    layoutRootNode: ref({ descendants: () => [] }),
+    ctes: ref([]),
+    toCteLinks: ref([]),
+    tree: ref({ descendants: () => [] }),
+    rootDescendants: ref([]),
+    rootLinks: ref([]),
+    doLayout: vi.fn(),
+    initZoom: vi.fn(),
+    fitToScreen: vi.fn(),
+    zoomIn: vi.fn(),
+    zoomOut: vi.fn(),
+    lineGen: vi.fn(),
+    centerNode: vi.fn(),
+    updateNodeSize: vi.fn(),
+    getNodeX: vi.fn(),
+    getNodeY: vi.fn(),
+    getNodeWidth: vi.fn(),
+    getLayoutExtent: vi.fn(),
+    buildTree: vi.fn(),
+  };
+
+  return {
+    usePlanLayout: () => layoutMock,
+  };
+});
+
+// Also mock with relative path
+vi.mock("../../composables/usePlanLayout", async () => {
+  const vue = await import("vue");
+  const ref = vue.ref;
+  const layoutMock = {
+    transform: {},
+    scale: {},
+    edgeWeight: vi.fn().mockReturnValue(1),
+    layoutRootNode: ref({ descendants: () => [] }),
+    ctes: ref([]),
+    toCteLinks: ref([]),
+    tree: ref({ descendants: () => [] }),
+    rootDescendants: ref([]),
+    rootLinks: ref([]),
+    doLayout: vi.fn(),
+    initZoom: vi.fn(),
+    fitToScreen: vi.fn(),
+    zoomIn: vi.fn(),
+    zoomOut: vi.fn(),
+    lineGen: vi.fn(),
+    centerNode: vi.fn(),
+    updateNodeSize: vi.fn(),
+    getNodeX: vi.fn(),
+    getNodeY: vi.fn(),
+    getNodeWidth: vi.fn(),
+    getLayoutExtent: vi.fn(),
+    buildTree: vi.fn(),
+  };
+  return {
+    usePlanLayout: () => layoutMock,
+  };
+});
 
 // Mock FontAwesome
 vi.mock("@fortawesome/vue-fontawesome", () => ({
@@ -104,7 +145,6 @@ vi.mock("@visualizer/services/share-service", () => ({
 }));
 
 describe("Plan.vue", () => {
-  // Stub global components or directives if needed
   const globalOptions = {
     stubs: {
       Teleport: true,
@@ -120,25 +160,18 @@ describe("Plan.vue", () => {
       global: globalOptions,
     });
 
-    // Wait for async parse if necessary (it's watched)
+    // Wait for async parse
     await wrapper.vm.$nextTick();
 
-    // It should render the plan container (since store.plan is mocked to exist)
     const planContainer = wrapper.find(".plan-container");
     expect(planContainer.exists()).toBe(true);
 
-    // Check for buttons
     const buttons = wrapper.findAll("button");
-    // We expect some buttons (zoom controls, search, etc.) but NOT Share/Export
     const buttonTexts = buttons.map((b) => b.text().trim()).filter((t) => t);
-
-    // Log found buttons for debugging
-    console.log("Found buttons:", buttonTexts);
 
     expect(buttonTexts).not.toContain("Share");
     expect(buttonTexts).not.toContain("Export PNG");
 
-    // Verify PlanStats is rendered
     expect(wrapper.find(".plan-stats").exists()).toBe(true);
   });
 });
