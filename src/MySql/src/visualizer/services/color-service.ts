@@ -11,7 +11,7 @@
  * @param   Number  l       The lightness
  * @return  Array           The RGB representation
  */
-function hslToRgb(h: number, s: number, l: number) {
+export function hslToRgb(h: number, s: number, l: number) {
   let r
   let g
   let b
@@ -51,7 +51,7 @@ export function durationPercentToClass(i: number): number {
   return 1
 }
 
-function hue2rgb(p: number, q: number, t: number) {
+export function hue2rgb(p: number, q: number, t: number) {
   if (t < 0) {
     t += 1
   }
