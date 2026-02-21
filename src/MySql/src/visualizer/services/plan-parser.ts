@@ -366,7 +366,6 @@ export class PlanParser {
       if (emptyLineMatches || headerMatches) {
         return;
       } else if (nodeMatches && !cteMatches && !subMatches) {
-        //const prefix = nodeMatches[NodeMatch.Prefix]
         const neverExecuted =
           nodeMatches[NodeMatch.NeverExecuted1] ||
           nodeMatches[NodeMatch.NeverExecuted2];
@@ -507,7 +506,6 @@ export class PlanParser {
         }
         previousElement.node.Plans?.push(newNode);
       } else if (subMatches) {
-        //const prefix = subMatches[1]
         const type = subMatches[2];
         // Remove elements from elementsAtDepth for deeper levels
         _.remove(elementsAtDepth, (e) => e[0] >= depth);
@@ -519,7 +517,6 @@ export class PlanParser {
         };
         elementsAtDepth.push([depth, element]);
       } else if (cteMatches) {
-        //const prefix = cteMatches[1]
         const cteName = cteMatches[2];
         // Remove elements from elementsAtDepth for deeper levels
         _.remove(elementsAtDepth, (e) => e[0] >= depth);
@@ -531,7 +528,6 @@ export class PlanParser {
         };
         elementsAtDepth.push([depth, element]);
       } else if (workerMatches) {
-        //const prefix = workerMatches[1]
         const workerNumber = parseInt(workerMatches[WorkerMatch.Number], 0);
         const previousElement = _.last(elementsAtDepth)?.[1] as NodeElement;
         if (!previousElement) {
@@ -581,8 +577,6 @@ export class PlanParser {
         _.remove(elementsAtDepth, (e) => e[0] >= depth);
         // Ignoring triggers as they are PG specific usually
       } else if (extraMatches) {
-        //const prefix = extraMatches[1]
-
         // Remove elements from elementsAtDepth for deeper levels
         // Depth == 1 is a special case here. Global info (for example
         // execution|planning time) have a depth of 1 but shouldn't be removed
