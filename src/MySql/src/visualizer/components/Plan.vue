@@ -477,7 +477,7 @@ function handleKeyDown(event: KeyboardEvent) {
         </h6>
         <div class="overflow-hidden d-flex w-100 h-100 position-relative mb-3">
           <div class="overflow-auto flex-grow-1">
-            <pre class="small p-2 mb-0" style="max-height: 200px"><code v-html="planSource"></code></pre>
+            <pre class="small p-2 mb-0" style="max-height: 200px"><code>{{ planSource }}</code></pre>
           </div>
           <Copy :content="planSource" />
         </div>
