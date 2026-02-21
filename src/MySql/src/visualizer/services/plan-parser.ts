@@ -166,7 +166,6 @@ export class PlanParser {
     source = source.replace(/^(├|╟|╠|╞)(─|═)\2*(┤|╢|╣|╡)\r?\n/gm, "");
 
     // Remove more horizontal lines
-    source = source.replace(/^\+-+\+\r?\n/gm, "");
     source = source.replace(/^└(─)+┘\r?\n/gm, "");
     source = source.replace(/^╚(═)+╝\r?\n/gm, "");
     source = source.replace(/^┌(─)+┐\r?\n/gm, "");
