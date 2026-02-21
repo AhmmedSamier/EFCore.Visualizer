@@ -8,4 +8,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.DebuggerVisualizers" Version="17.6.1032901" />
   </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>IQueryableObjectSource.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>
