@@ -1,4 +1,4 @@
-class VSCodeAPIWrapper {
+export class VSCodeAPIWrapper {
   private readonly vsCodeApi: ReturnType<typeof acquireVsCodeApi> | undefined;
 
   constructor() {
