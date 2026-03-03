@@ -47,6 +47,8 @@ internal abstract class DatabaseProvider(DbCommand command)
             .Replace("\n", "\\n")
             .Replace("\t", "\\t")
             .Replace("`", "\\`")
-            .Replace("${", "$\\{");
+            .Replace("${", "$\\{")
+            .Replace("<", "\\u003C")
+            .Replace(">", "\\u003E");
     }
 }
