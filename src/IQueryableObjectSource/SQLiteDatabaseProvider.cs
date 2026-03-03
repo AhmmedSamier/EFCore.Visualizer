@@ -33,15 +33,17 @@ internal class SQLiteDatabaseProvider(DbCommand command) : DatabaseProvider(comm
 
         var htmlBuilder = new StringBuilder();
 
-        BuildIndentedPlanHtml(planItems, -1, htmlBuilder);
+        var lookup = planItems.ToLookup(i => i.parent);
+
+        BuildIndentedPlanHtml(lookup, -1, htmlBuilder);
 
         return htmlBuilder.ToString();
     }
 
-    private void BuildIndentedPlanHtml(List<(int id, int parent, string detail)> items, int parentId,
+    internal void BuildIndentedPlanHtml(ILookup<int, (int id, int parent, string detail)> lookup, int parentId,
         StringBuilder builder)
     {
-        var matches = items.Where(i => i.parent == parentId).ToList();
+        var matches = lookup[parentId];
 
         if (matches.Any())
         {
@@ -53,7 +55,7 @@ internal class SQLiteDatabaseProvider(DbCommand command) : DatabaseProvider(comm
                 builder.AppendLine(
                     $"<span class=\"tf-nc\"><span class=\"indicator\">▼</span>{WebUtility.HtmlEncode(item.detail)}</span>");
 
-                BuildIndentedPlanHtml(items, item.id, builder);
+                BuildIndentedPlanHtml(lookup, item.id, builder);
 
                 builder.AppendLine("</li>");
             }
