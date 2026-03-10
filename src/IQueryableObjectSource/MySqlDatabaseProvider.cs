@@ -46,8 +46,19 @@ internal class MySqlDatabaseProvider(DbCommand command) : DatabaseProvider(comma
         var widths = new int[headers.Length];
         for (var i = 0; i < headers.Length; i++)
         {
-            var maxRowWidth = rows.Count == 0 ? 0 : rows.Max(r => r[i].Length);
-            widths[i] = Math.Max(headers[i].Length, maxRowWidth);
+            widths[i] = headers[i].Length;
+        }
+
+        foreach (var row in rows)
+        {
+            for (var i = 0; i < headers.Length; i++)
+            {
+                var length = row[i].Length;
+                if (length > widths[i])
+                {
+                    widths[i] = length;
+                }
+            }
         }
 
         var builder = new StringBuilder();
