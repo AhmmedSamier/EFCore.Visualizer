@@ -271,75 +271,79 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
     {
         // ToQueryString is in EntityFrameworkQueryableExtensions (Microsoft.EntityFrameworkCore.dll)
         // CreateDbCommand is in RelationalQueryableExtensions (Microsoft.EntityFrameworkCore.Relational.dll)
-        string typeName = name == "ToQueryString"
+        var typeName = name == "ToQueryString"
             ? "Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions"
             : "Microsoft.EntityFrameworkCore.RelationalQueryableExtensions";
 
-        Type type = null;
-
-        // First, try the standard Type.GetType approach
-        if (name == "ToQueryString")
-        {
-            type = Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore");
-        }
-        else
-        {
-            type = Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore.Relational")
-                   ?? Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore");
-        }
-
-        // If not found, search through all EF Core assemblies
-        if (type == null)
-        {
-            var efAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.IsDynamic &&
-                            (a.FullName.Contains("EntityFrameworkCore") ||
-                             a.FullName.Contains("Microsoft.Data")))
-                .ToList();
-
-            foreach (var assembly in efAssemblies)
-            {
-                try
-                {
-                    type = assembly.GetType(typeName);
-                    if (type != null)
-                    {
-                        break;
-                    }
-                }
-                catch
-                {
-                    // Ignore exceptions from assemblies that can't be inspected
-                    continue;
-                }
-            }
-        }
-
+        var type = ResolveType(typeName, name);
         if (type == null)
         {
             return null;
         }
 
+        return FindMatchingMethod(type, name, returnType);
+    }
+
+    private static Type ResolveType(string typeName, string methodName)
+    {
+        // First, try the standard Type.GetType approach
+        var type = methodName == "ToQueryString"
+            ? Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore")
+            : Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore.Relational")
+              ?? Type.GetType($"{typeName}, Microsoft.EntityFrameworkCore");
+
+        return type ?? ScanAssembliesForType(typeName);
+    }
+
+    private static Type ScanAssembliesForType(string typeName)
+    {
+        var efAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => !a.IsDynamic &&
+                        (a.FullName.Contains("EntityFrameworkCore") ||
+                         a.FullName.Contains("Microsoft.Data")));
+
+        foreach (var assembly in efAssemblies)
+        {
+            try
+            {
+                var type = assembly.GetType(typeName);
+                if (type != null)
+                {
+                    return type;
+                }
+            }
+            catch
+            {
+                // Ignore exceptions from assemblies that can't be inspected
+            }
+        }
+
+        return null;
+    }
+
+    private static MethodInfo FindMatchingMethod(Type type, string methodName, Type returnType)
+    {
         // Find the method with flexible parameter matching
         var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
 
         foreach (var method in methods)
         {
-            if (method.Name != name)
+            if (method.Name != methodName || method.ReturnType != returnType)
+            {
                 continue;
-
-            if (method.ReturnType != returnType)
-                continue;
+            }
 
             var parameters = method.GetParameters();
             if (parameters.Length != 1)
+            {
                 continue;
+            }
 
             var paramType = parameters[0].ParameterType;
 
             // Check if the parameter is IQueryable (check both generic and non-generic)
             // The parameter type might be IQueryable<T> which has Name "IQueryable`1"
-            if (paramType.Name == "IQueryable`1" || paramType.Name == "IQueryable")
+            if (paramType.Name is "IQueryable`1" or "IQueryable")
             {
                 return method;
             }
