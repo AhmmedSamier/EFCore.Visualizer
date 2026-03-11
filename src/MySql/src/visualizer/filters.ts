@@ -12,10 +12,11 @@ export function duration(value: number | undefined): string {
     return "-"
   }
   if (value < 0) {
-    console.error(`
+    console.warn(`
       Duration is negative. This is probably a bug.
       Please report it at https://github.com/ahmmedsamier/MySql-Plan-Visualizer.
     `)
+    return value.toLocaleString() + "ms"
   }
   const result: string[] = []
   let denominator: number = 1000 * 60 * 60 * 24
