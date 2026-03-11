@@ -268,10 +268,10 @@ export class PlanService {
               `.*${name.replace(/[^a-zA-Z0-9]/g, "\\$&")}[0-9]?`,
             ).exec(value)
             if (matches) {
+              const exclusive = Number(node[NodeProp.EXCLUSIVE_DURATION] || 0)
               node[NodeProp.EXCLUSIVE_DURATION] = Math.max(
                 0,
-                (node[NodeProp.EXCLUSIVE_DURATION] as number) -
-                  (subPlan[NodeProp.ACTUAL_TOTAL_TIME] || 0),
+                exclusive - (subPlan[NodeProp.ACTUAL_TOTAL_TIME] || 0),
               )
               // Stop iterating for this node
               return false
