@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.DebuggerVisualizers;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
@@ -18,6 +19,13 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
             "Resources");
 
     private static readonly ConcurrentDictionary<(string, Type), Lazy<MethodInfo>> MethodCache = new();
+
+    private static readonly Lazy<IEnumerable<Assembly>> CandidateAssemblies = new(() =>
+        AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => !a.IsDynamic &&
+                        (a.FullName.Contains("EntityFrameworkCore") ||
+                         a.FullName.Contains("Microsoft.Data")))
+            .ToList());
 
     public override void TransferData(object target, Stream incomingData, Stream outgoingData)
     {
@@ -178,8 +186,8 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
             query = string.Empty;
 
             // Enhanced diagnostic information
-            var efAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.IsDynamic && a.FullName.Contains("EntityFrameworkCore"))
+            var efAssemblies = CandidateAssemblies.Value
+                .Where(a => a.FullName.Contains("EntityFrameworkCore"))
                 .Select(a => a.GetName().Name + " v" + a.GetName().Version)
                 .ToList();
 
@@ -189,8 +197,8 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
 
             // Check if the type exists
             const string typeName = "Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions";
-            var efType = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.IsDynamic && a.FullName.Contains("EntityFrameworkCore"))
+            var efType = CandidateAssemblies.Value
+                .Where(a => a.FullName.Contains("EntityFrameworkCore"))
                 .Select(a =>
                 {
                     try
@@ -291,11 +299,7 @@ public class EFCoreQueryableObjectSource : VisualizerObjectSource
         // If not found, search through all EF Core assemblies
         if (type == null)
         {
-            var efAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.IsDynamic &&
-                            (a.FullName.Contains("EntityFrameworkCore") ||
-                             a.FullName.Contains("Microsoft.Data")))
-                .ToList();
+            var efAssemblies = CandidateAssemblies.Value;
 
             foreach (var assembly in efAssemblies)
             {
